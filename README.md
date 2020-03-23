@@ -45,3 +45,7 @@ ps: 关于commander指令内容具体参考 https://github.com/tj/commander.js/b
 - 在bin的cli文件中配置refresh文件
 - 运行生成路由
 - 写一个sh文件 发布到npm上
+
+
+##### http同源策略
+> 协议 url 端口 任意不同 则看错不同源

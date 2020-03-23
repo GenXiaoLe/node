@@ -29,7 +29,7 @@ const serve = http.createServer((request, response) => {
             response.setHeader('Content-Type', 'text/html');
             response.end(data);
         });
-    } else if (url === '/user' && method === 'GET') {
+    } else if (url === '/api/user' && method === 'GET') {
         response.writeHead(200, { 'Content-type': 'application/json' })
         response.end(JSON.stringify([{name: 'test-l', age: 28}]))
     } else if (method === 'GET' && headers.accept.indexOf('image/*') !== -1) {
