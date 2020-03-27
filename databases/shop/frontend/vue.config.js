@@ -1,3 +1,4 @@
+console.log('vue.config.js, serve')
 module.exports = {
     devServer: {
       proxy: {

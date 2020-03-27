@@ -8,6 +8,14 @@
                 :data="tableData"
                 style="width: 100%">
                 <el-table-column
+                    label="操作"
+                    width="200">
+                    <template slot-scope="scope">
+                        <el-button type="text" size="small" @click="addCart(scope.row)">加入购物车</el-button>
+                        <el-button type="text" size="small" @click="deleteGoods(scope.row)">删除</el-button>
+                    </template>
+                </el-table-column>
+                <el-table-column
                     prop="title"
                     label="名称"
                     width="180">
@@ -42,11 +50,34 @@
         },
         methods: {
             async getList() {
-                const res = await this.$http.get('api/goods/getList');
-                console.log(res);
+                const res = await this.$http.get('api/products/getList');
+                if (res.data && res.data.items) {
+                    this.tableData = res.data.items;
+                }
             },
-            goodsChange(form) {
-                console.log(form)
+            async goodsChange(form) {
+                let params = { ...form };
+                params.price = params.price === '' ? 0 : Number(params.price);
+
+                const res = await this.$http.post('api/products/add', form);
+
+                if (res.data && res.data.success) {
+                    this.getList();
+                }
+            },
+            async deleteGoods(row) {
+                const res = await this.$http.delete('api/products/' + row.id);
+                if (res.data && res.data.success) {
+                    this.$message('删除成功');
+                    this.getList();
+                }
+            },
+            async addCart(row) {
+                const res = await this.$http.post('api/add/cart', { id: row.id });
+                if (res.data && res.data.success) {
+                    this.$message('已添加至购物车');
+                    this.getList();
+                }
             }
         },
         mounted() {

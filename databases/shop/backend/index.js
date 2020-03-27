@@ -16,7 +16,8 @@ const bodyParser = require('koa-bodyparser')
 
 // 请求定位到根目录
 app.use(require('koa-static')(__dirname + '/'));
-app.use(bodyParser);
+// 解析post请求
+app.use(bodyParser());
 
 
 // 初始化数据库
@@ -33,6 +34,7 @@ const OrderItem = require('./models/order-item');
 app.use(async (ctx, next) => {
     const user = await User.findByPk(1);
     ctx.user = user;
+
     await next();
 })
 
@@ -42,16 +44,15 @@ app.use(async (ctx, next) => {
 // 购物车有查删和添加到订单
 // 订单有查
 
-const router = require('koa-router')();
+const Router = require('koa-router')();
 
 // 货品查询
-router.get('/goods/getList', async (ctx, next) => {
-    const list = await Product.findAll();
-
-    ctx.body = { list };
+Router.get('/products/getList', async (ctx) => {
+    const products = await Product.findAll();
+    ctx.body = { items: products }
 })
 // 货品添加
-router.post('/goods/add', async (ctx, next) => {
+Router.post('/products/add', async (ctx) => {
     // koa-bodyparser解析
     const body = ctx.request.body;
     await ctx.user.createProduct(body);
@@ -60,17 +61,136 @@ router.post('/goods/add', async (ctx, next) => {
     }
 })
 // 货品删除
-router.delete('/goods/delete/:id', async (ctx, next) => {
+Router.delete('/products/:id', async (ctx) => {
     const id = ctx.params.id;
     await Product.destroy({
-        where: id
-    });
+        where: {
+            id
+        }
+    })
     ctx.body = {
         success: true
     }
 })
 
-app.use(router.routes())
+// 获取购物车内容
+Router.get('/cart/list', async (ctx) => {
+    const cart = await ctx.user.getCart();
+    const product = await cart.getProducts();
+    ctx.body = { items: product };
+})
+
+// 添加购物车
+Router.post('/add/cart', async (ctx) => {
+    const body = ctx.request.body;
+    // 货品id
+    const productId = body.id;
+    // 货品个数
+    const quantity = 1;
+
+    // 这里需要判断 购物车里有无该货品 有的话 number+1 没有的话直接写入购物车
+
+    // 首先获取购物车
+    const cart = await ctx.user.getCart();
+    // 查找购物车内有无该货品
+    const fetchCart = cart;
+    const productFind = await cart.getProducts({
+        where: {
+            id: productId
+        }
+    })
+
+    // productFind 返回的是数组 判断有无货品
+    let product;
+    if (productFind.length > 0) {
+        product = productFind[0];
+    }
+
+    if (product) {
+        // 如果有product 则在把这个货品数量+1 货品数量在中间表cartItem中
+        quantity = product.cartItem.quantity + 1;
+    } else {
+        // 如果没有 则从货品的表中找到该货品直接插入到购物车中
+        product = await Product.findByPk(productId);
+    }
+
+    await fetchCart.addProduct(
+        product, 
+        {
+            through: {
+                quantity
+            }
+        }
+    )
+
+    ctx.body = { success: true }
+})
+
+// 删除购物车的数据
+Router.delete('/cart/:id', async (ctx) => {
+    const id = ctx.params.id;
+
+    // 先获取到用户关联的购物车
+    const cart = await ctx.user.getCart();
+    // 找出用户关联购物车里的货品
+    const products = await cart.getProducts({
+        where: { id }
+    });
+
+    // 删除货品关联的购物车里的货品
+    const product = products[0];
+    await product.cartItem.destroy();
+    ctx.body = { success: true }
+})
+
+// 购物车加入到订单
+Router.post('/add/order', async (ctx) => {
+    // 创建订单要找到用户关联的购物车 然后找到购物车中的商品 创建用户关联的订单 然后把货品利用货品和订单的中间表加入到订单中
+    // 找到用户关联的购物车
+    const cart = await ctx.user.getCart();
+    const fetchCart = cart;
+    // 找到购物车里的货品
+    const product = await cart.getProducts();
+
+    // 创建用户关联的订单
+    const order = await ctx.user.createOrder();
+
+    // 在订单中添加货品
+    const res = await order.addProduct(
+        // 循环货品 给货品和订单中间表中的quantity赋值
+        product.map(p => {
+            p.orderItem = {
+                quantity: p.cartItem.quantity
+            }
+            return p;
+        })
+    )
+
+    // 最后清空购物车
+    await fetchCart.setProducts(null);
+
+    ctx.body = { success: true }
+})
+
+// 获取购物车
+Router.get('/order/getList', async (ctx) => {
+    const order = await ctx.user.getOrders(
+        {
+            include: [
+                // 简单外联 获取订单关联的货品数据
+                'products'
+            ],
+            order: [
+                // 排序
+                ['createdAt', 'DESC']
+            ]
+        }
+    )
+
+    ctx.body = { items: order }
+})
+
+app.use(Router.routes())
 
 
 // 关联数据库
@@ -118,17 +238,18 @@ Product.belongsToMany(
 );
 
 // 同步数据库 如果没有用户需要创建一个用户来模拟登陆权鉴
-sequelize.sync({force: true}).then(
+sequelize.sync().then(
     async () => {
-        let user = User.findByPk(1);
+        // User.findByPk(1);
+        let user = await User.findByPk(1);
 
         if (!user) {
             // 插入一条数据
-            user = await User.creat({
+            user = await User.create({
                 name: 'xiaobai',
                 email: '551832@qq.com'
             });
-            // TODO: createCart来源 猜测关联多表以后 use可以调用cart和product的Sequelize类
+            // 关联多表以后 use可以调用cart和product的Sequelize类
             await user.createCart();
         }
 

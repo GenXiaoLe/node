@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <el-menu
-      default-active="/"
+      :default-active="this.$route.path"
       class="el-menu-demo" 
       mode="horizontal"
       @select="navSelect">

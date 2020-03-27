@@ -42,6 +42,11 @@
                 this.$emit('update:visible', val);
                 if (!val) {
                     this.$emit('onChange', this.form);
+                    this.form = {
+                        title: '',
+                        price: '',
+                        description: ''
+                    };
                 }
             },
         },
