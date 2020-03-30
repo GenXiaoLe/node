@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瓜果超市</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"> </script>
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+<body>
+    <div id="app">
+        <el-input placeholder="请输⼊入内容" v-model="params.keyword" class="input-with-select" @change="search"></el-input>
+
+        <div style="margin: 10px 0;">
+            <el-button v-for="(item, index) in categoryList" :key="index" @click="categoryClick(item)">{{item}}</el-button>
+        </div>
+
+        <el-table
+            :data="tableData"
+            style="width: 540px">
+            <el-table-column
+                label="名称"
+                width="180">
+                <template slot-scope="scope">
+                    {{scope.row.name}}
+                </template>
+            </el-table-column>
+            <el-table-column
+                label="价格"
+                width="180">
+                <template slot-scope="scope">
+                    {{scope.row.price}}
+                </template>
+            </el-table-column>
+            <el-table-column
+                label="种类"
+                width="180">
+                <template slot-scope="scope">
+                    {{scope.row.category}}
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+            @current-change="currentChange"
+            layout="prev, pager, next"
+            :total="total">
+        </el-pagination>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            params: {
+                pageSize: 1,
+                keyword: '',
+                category: ''
+            },
+            total: 0,
+            tableData: [],
+            categoryList: []
+        },
+        created() { 
+            this.getData(this.params);
+            this.getCategory();
+        },
+        methods: {
+            async getData(params) {
+                let res = await axios.get(`/api/getPage?pageSize=${params.pageSize}&keyword=${params.keyword}&category=${params.category}`);
+                let _data = res.data.data
+
+                if (_data) {
+                    this.tableData = _data.list;
+                    this.total = _data.pagination.total;
+                    if (params.keyword) {
+                        this.total = this.tableData.length;
+                    }
+                }
+            },
+            async getCategory() {
+                let res = await axios.get(`/api/getCategory`);
+                let _data = res.data;
+                if (_data) {
+                    this.categoryList = _data.category;
+                }
+            },
+            currentChange(current) {
+                this.params.pageSize = current;
+                this.getData(this.params);
+            },
+            search(val) {
+                this.params.keyword = val;
+                this.getData(this.params);
+            },
+            categoryClick(val) {
+                this.params.category = [val];
+                this.getData(this.params);
+            }
+        }
+    })
+</script>
+</html>

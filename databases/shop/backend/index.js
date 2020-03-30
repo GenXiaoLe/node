@@ -108,11 +108,17 @@ Router.post('/add/cart', async (ctx) => {
 
     if (product) {
         // 如果有product 则在把这个货品数量+1 货品数量在中间表cartItem中
-        quantity = product.cartItem.quantity + 1;
+        const oldQty = product.cartItem.quantity;
+        console.log('quantity33----------' + quantity)
+        quantity = oldQty + 1;
+        console.log('quantity22----------' + quantity)
     } else {
         // 如果没有 则从货品的表中找到该货品直接插入到购物车中
+        console.log('quantity555----------')
         product = await Product.findByPk(productId);
     }
+
+    console.log('quantity----------' + quantity)
 
     await fetchCart.addProduct(
         product, 
