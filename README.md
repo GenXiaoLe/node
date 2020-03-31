@@ -48,4 +48,6 @@ ps: 关于commander指令内容具体参考 https://github.com/tj/commander.js/b
 
 
 ##### http同源策略
-> 协议 url 端口 任意不同 则看错不同源
+> 协议 url 端口 任意不同 则看作不同源
+
+

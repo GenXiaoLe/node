@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"> </script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <input type="text" v-model="useName" />
+        <p><button @click="login">登录</button></p>
+        <p><button @click="logout">登出</button></p>
+        <p><button @click="getUser">查询</button></p>
+        <p>{{message}}</p>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            useName: '',
+            message: ''
+        },
+        methods: {
+            async getUser() {
+                let res = await axios.get('/user/useInfo');
+
+                if (res.data) {
+
+                    if (res.data.message) {
+                        this.message = res.data.message;
+                    }
+
+                    if (res.data.info) {
+                        this.message = `${res.data.info.message}, 登录人是${res.data.info.useName}`;
+                    }
+                }
+            },
+            async login() {
+                let res = await axios.post('/user/login', { useName: this.useName })
+                if (res.data) {
+                    this.message = res.data.message;
+                }
+            },
+            async logout() {
+                let res = await axios.post('/user/logout');
+                if (res.data) {
+                    this.message = res.data.message;
+                }
+            }
+        }
+    })
+</script>
+</html>
