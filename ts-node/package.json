@@ -1,0 +1,27 @@
+{
+  "name": "ts-node",
+  "version": "1.0.0",
+  "description": "安装 typescript ts-node-dev tslint @types/node - typescript 是ts语法库 - ts-node-dev 是ts node语法",
+  "main": "index.js",
+  "dependencies": {
+    "koa": "^2.11.0",
+    "koa-body": "^4.1.1",
+    "koa-static": "^5.0.0",
+    "koa-xtime": "^1.0.0",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tslint": "^6.1.1",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "@types/koa-static": "^4.0.1",
+    "koa-router": "^8.0.8"
+  },
+  "scripts": {
+    "start": "ts-node-dev ./src/index.ts -P tsconfig.json --no-cache",
+    "build": "tsc -P tsconfig.json && node ./dist/index.js",
+    "tslint": "tslint --fix -p tsconfig.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
