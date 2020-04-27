@@ -92,4 +92,4 @@ router.get('/getFollows', async ctx => {
 
 app.use(router.routes()); /*启动路由*/
 app.use(router.allowedMethods());
-app.listen(3000, () => console.log('node listen prot 3000'));
+app.listen(80, () => console.log('node listen prot 80'));
