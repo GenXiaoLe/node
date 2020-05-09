@@ -30,4 +30,27 @@ $ npm stop
 - Use `npm run autod` to auto detect dependencies upgrade, see [autod](https://www.npmjs.com/package/autod) for more detail.
 
 
+### 用到的插件
+
+- egg-router-group
+- egg-mongoose
+- egg-validate
+- md5
+- jsonwebtoken
+
+### 接口返回值规范
+
+```
+
+code: {
+    code: 0,
+    date: {},
+    message: ''
+}
+
+// 1 代表成功 其他的是失败 -666代表token失效
+
+```
+
+
 [egg]: https://eggjs.org
