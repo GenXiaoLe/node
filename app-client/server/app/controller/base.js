@@ -3,15 +3,15 @@
 const Controller = require('egg').Controller;
 
 class BaseController extends Controller {
-  success(data) {
-    this.ctx.body = {
-      data,
+  success(ctx, data) {
+    ctx.body = {
       code: 1,
+      data,
     };
   }
 
-  error(code, message, error = {}) {
-    this.ctx.body = {
+  error(ctx, code, message, error = {}) {
+    ctx.body = {
       code,
       message,
       error,
