@@ -1,10 +1,9 @@
 'use strict';
 
-const Controller = require('egg').Controller;
-
+const BaseController = require('./base');
 const svgCaptcah = require('svg-captcha');
 
-class UtilsController extends Controller {
+class UtilsController extends BaseController {
   async captcha() {
     const { ctx } = this;
     // 使用svgCaptcah创建验证码
@@ -25,6 +24,24 @@ class UtilsController extends Controller {
     console.log('captcha => ' + captcha.text);
 
     ctx.body = captcha.data;
+  }
+
+  async emailCaptcha() {
+    const { ctx } = this;
+    // 构建email验证码
+    const emailCaptcha = Math.random().toString().slice(4, 8);
+    console.log(`emailCaptcha => ${emailCaptcha}`);
+
+    // 存入session方便后续对比
+    ctx.session.emailCaptcha = emailCaptcha;
+    // 调用业务层service的方法发送邮件
+    const ret = await this.service.tools.sendEmail(ctx.query.email, 'cc社区');
+
+    if (ret) {
+      this.success(ctx, { message: '邮件验证码发送成功，请至邮箱中查看' });
+    } else {
+      this.error(ctx, -1, '发送失败');
+    }
   }
 }
 

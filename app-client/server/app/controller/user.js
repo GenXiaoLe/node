@@ -50,7 +50,17 @@ class UserController extends BaseController {
 
   async login() {
     const { success, error, ctx, app } = this;
-    const { email, passwd } = ctx.request.body;
+    const { email, passwd, captcha, emailCaptcha } = ctx.request.body;
+
+    // 判断验证码是否正确
+    if (captcha.toUpperCase() !== ctx.session.captcha.toUpperCase()) {
+      return error(ctx, -1, '验证码错误');
+    }
+
+    // 判断邮箱验证码是否正确
+    if (emailCaptcha !== ctx.session.emailCaptcha) {
+      return error(ctx, -1, '邮箱验证码错误');
+    }
 
     // 查询用户是否存在
     const ret = await this.ctx.model.User.findOne({
