@@ -2,6 +2,7 @@
 
 const Controller = require('egg').Controller;
 
+// 定制返回规格和规范
 class BaseController extends Controller {
   success(ctx, data) {
     ctx.body = {

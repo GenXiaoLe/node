@@ -14,9 +14,9 @@ module.exports = app => {
     prefix: '/user',
   },
   router => {
-    const { register } = controller.user;
+    const { register, login } = controller.user;
     router.post('/register', register);
-    // router.post('/login', login);
+    router.post('/login', login);
     // router.get('/info', info);
   });
 };
