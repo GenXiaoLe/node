@@ -5,7 +5,7 @@
         app-client
       </h1>
       <h2 class="subtitle">
-        app-client
+        {{`欢迎${info.nickname}回来，你使用的邮箱是${info.email}`}}
       </h2>
       <div class="links">
         <a
@@ -27,10 +27,44 @@
   </div>
 </template>
 
-<script lang="ts">
+<script>
 
 export default {
+  data() {
+    return {
+      info: {
+        nickname: 'xxx',
+        email: 'xxx'
+      }
+    }
+  },
+  methods: {
+    async getInfo() {
+      const ret = await this.$http.get('/user/info');
 
+      if (ret.code === -666) {
+        this.$alert(
+            '登录已过期或未登陆', 
+            '请前往登录页面登录', 
+            {
+                confirmButtonText: 'go to login',
+                callback: action => {
+                    this.$router.push(`/login?redirect=${this.$route.path}`);
+                }
+            }
+        );
+        return;
+      }
+
+      if (ret.code === 1) {
+        this.info.nickname = ret.data.userInfo.nickname;
+        this.info.email = ret.data.userInfo.email;
+      }
+    }
+  },
+  mounted() {
+    this.getInfo();
+  }
 }
 </script>
 

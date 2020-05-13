@@ -76,7 +76,8 @@ class UserController extends BaseController {
     const token = jwt.sign(
       {
         email,
-        passwd,
+        nickname,
+        _id: ret._id,
       },
       app.config.jwt.secret,
       { expiresIn: '1h' }
@@ -90,6 +91,19 @@ class UserController extends BaseController {
         nickname,
         token,
         _id: ret._id,
+      },
+    });
+  }
+
+  async info() {
+    const { success, ctx } = this;
+
+    success(ctx, {
+      message: '登陆成功',
+      userInfo: {
+        email: ctx.state.email,
+        _id: ctx.state._id,
+        nickname: ctx.state.nickname,
       },
     });
   }

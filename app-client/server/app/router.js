@@ -4,7 +4,10 @@
  * @param {Egg.Application} app - egg application
  */
 module.exports = app => {
-  const { router, controller } = app;
+  const { router, controller, middleware } = app;
+
+  const jwt = middleware.jwt({ app });
+
   router.get('/home', controller.home.index);
 
   // 获取验证码
@@ -18,9 +21,9 @@ module.exports = app => {
     prefix: '/user',
   },
   router => {
-    const { register, login } = controller.user;
+    const { register, login, info } = controller.user;
     router.post('/register', register);
     router.post('/login', login);
-    // router.get('/info', info);
+    router.get('/info', jwt, info);
   });
 };
