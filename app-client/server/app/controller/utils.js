@@ -2,6 +2,8 @@
 
 const BaseController = require('./base');
 const svgCaptcah = require('svg-captcha');
+// const fse = require('fs-extra');
+const fs = require('fs');
 
 class UtilsController extends BaseController {
   async captcha() {
@@ -41,6 +43,20 @@ class UtilsController extends BaseController {
       this.success(ctx, { message: '邮件验证码发送成功，请至邮箱中查看' });
     } else {
       this.error(ctx, -1, '发送失败');
+    }
+  }
+
+  async upload() {
+    const { ctx, app } = this;
+    const { filepath, filename } = ctx.request.files[0];
+    const uploadUrl = app.config.UPLOADURL + '/' + filename;
+
+    try {
+      // const ret = await fse.move(filepath, app.config.UPLOADURL + '/' + filename);
+      fs.createReadStream(filepath).pipe(fs.createWriteStream(uploadUrl));
+      this.success(ctx, { message: '上传成功', url: uploadUrl });
+    } catch (error) {
+      this.error(ctx, -1, '上传失败');
     }
   }
 }

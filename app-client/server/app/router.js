@@ -10,6 +10,9 @@ module.exports = app => {
 
   router.get('/home', controller.home.index);
 
+  // 上传图片
+  router.post('/upload', controller.utils.upload);
+
   // 获取验证码
   router.get('/captcha', controller.utils.captcha);
 

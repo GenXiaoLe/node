@@ -22,6 +22,11 @@
         >
           GitHub
         </a>
+        <a href="javascript:;" class="button--grey">
+          <router-link to="/uc">
+            用户界面
+          </router-link>
+        </a>
       </div>
     </div>
   </div>
