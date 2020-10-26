@@ -75,7 +75,6 @@ export default {
 
             let ret = await this.$http.get(`/emailCaptcha?email=${this.form.email}`);
             
-            console.log(ret);
             if (ret.code === 1) {
                 this.$message({
                     message: ret.data.message,

@@ -12,13 +12,15 @@
 </template>
 
 <script>
+    import sparkMD5 from 'spark-md5'
     export default {
         data() {
             return {
                 file: {},
                 fileUrl: '',
                 percentage: 0,
-                status: ''
+                status: '',
+                size: 1024 * 1024 * 1 // 1M
             }
         },
         methods: {
@@ -64,37 +66,77 @@
             async isImage(file) {
                 return await this.isGif(file) || await this.isPng(file);
             },
-            async upload() {
-                if (!await this.isImage(this.file)) {
-                    return this.$message({
-                        message: '请上传正确的图片格式文件',
-                        type: 'error'
-                    });
+            // 分割文件chunks
+            splitFileChunks (file) {
+                const chunks = []
+                const size = file.size
+                let countSize = 0
+                while (countSize < size) {
+                    chunks.push(file.slice(countSize, countSize + this.size))
+                    countSize += this.size
                 }
-                return;
-
-                let formDate = new FormData();
-                
-                formDate.append('name', 'file');
-                formDate.append('files', this.file);
-
-                const ret = await this.$http.post(
-                    '/upload', 
-                    formDate,
-                    {
-                        onUploadProgress: progress => {
-                            this.percentage = Number(Math.floor(progress.loaded / this.file.size).toFixed()) * 100
-                        }
+                return chunks
+            },
+            // 抽样hash 第一块 最后一块取全量 区域取前中后各一个字符
+            createFileHash (file) {
+                return new Promise(resolve => {
+                    const spark = new SparkMD5().ArrayBuffer()
+                    const offset = 1 * 1024 * 1024
+                    const size = file.size
+                    let countSize = 0
+                    let fileArrayBuffer = ''
+                    while (countSize < size) {
+                        if (countSize + offset >= size || ) 
+                        countSize += this.size
                     }
-                );
+                    // 创建文件流读取
+                    var reader = new FileReader();
 
-                if (ret.code === 1) {
-                    this.fileUrl = ret.data.url;
-                    this.$message({
-                        message: ret.data.message,
-                        type: 'success'
-                    });
-                }
+                    reader.onload = (e) => {
+                        
+
+                        resolve(ret);
+                    }
+
+                    reader.readAsArrayBuffer()
+                })
+            },
+
+
+            async upload() {
+                const chunks = this.splitFileChunks(this.file)
+                // const fileHash = this.createFileHash(this.file)
+                console.log(chunks)
+                // if (!await this.isImage(this.file)) {
+                //     return this.$message({
+                //         message: '请上传正确的图片格式文件',
+                //         type: 'error'
+                //     });
+                // }
+                // return;
+
+                // let formDate = new FormData();
+                
+                // formDate.append('name', 'file');
+                // formDate.append('files', this.file);
+
+                // const ret = await this.$http.post(
+                //     '/upload', 
+                //     formDate,
+                //     {
+                //         onUploadProgress: progress => {
+                //             this.percentage = Number(Math.floor(progress.loaded / this.file.size).toFixed()) * 100
+                //         }
+                //     }
+                // );
+
+                // if (ret.code === 1) {
+                //     this.fileUrl = ret.data.url;
+                //     this.$message({
+                //         message: ret.data.message,
+                //         type: 'success'
+                //     });
+                // }
             }
         },
         mounted() {
