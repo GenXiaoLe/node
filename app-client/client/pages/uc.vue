@@ -12,7 +12,7 @@
 </template>
 
 <script>
-    import sparkMD5 from 'spark-md5'
+    import SparkMD5 from 'spark-md5'
     export default {
         data() {
             return {
@@ -77,36 +77,41 @@
                 }
                 return chunks
             },
-            // 抽样hash 第一块 最后一块取全量 区域取前中后各一个字符
+            // 抽样hash 第一块 最后一块取全量 区域取前中后各两个字符
             createFileHash (file) {
                 return new Promise(resolve => {
-                    const spark = new SparkMD5().ArrayBuffer()
+                    const spark = new SparkMD5.ArrayBuffer()
                     const offset = 1 * 1024 * 1024
                     const size = file.size
-                    let countSize = 0
-                    let fileArrayBuffer = ''
-                    while (countSize < size) {
-                        if (countSize + offset >= size || ) 
-                        countSize += this.size
+                    let cur = 0
+                    let fileChunks = [file.slice(0, offset)]
+                    while (cur < size) {
+                        // 如果是最后一块
+                        if (cur + offset >= size) {
+                            fileChunks.push(file.slice(cur, cur + offset))
+                        } else {
+                            const min = (cur + offset) / 2
+                            const end = cur + offset
+
+                            fileChunks.push(file.slice(cur, cur + 2))
+                            fileChunks.push(file.slice(min, min + 2))
+                            fileChunks.push(file.slice(end, end - 2))
+                        }
+                        cur += this.size
                     }
                     // 创建文件流读取
-                    var reader = new FileReader();
+                    var reader = new FileReader()
 
+                    reader.readAsArrayBuffer(new Blob(fileChunks))
                     reader.onload = (e) => {
-                        
-
-                        resolve(ret);
+                        spark.append(e.target.result)
+                        resolve(spark.end());
                     }
-
-                    reader.readAsArrayBuffer()
                 })
             },
 
 
             async upload() {
-                const chunks = this.splitFileChunks(this.file)
-                // const fileHash = this.createFileHash(this.file)
-                console.log(chunks)
                 // if (!await this.isImage(this.file)) {
                 //     return this.$message({
                 //         message: '请上传正确的图片格式文件',
@@ -114,6 +119,38 @@
                 //     });
                 // }
                 // return;
+                const chunks = this.splitFileChunks(this.file)
+                const fileHash = await this.createFileHash(this.file)
+                console.log(fileHash)
+
+                await this.uploadFile(chunks, fileHash)
+            },
+            async uploadFile (chunks, fileHash) {
+                const chunksAxios = chunks.map((item, index) => {
+                    return {
+                        index,
+                        file: item,
+                        fileHash,
+                        name: `${fileHash}-${index}`
+                    }
+                }).map(item => {
+                    let formDate = new FormData()
+                    formDate.append('name', item.name)
+                    formDate.append('file', item.file)
+                    formDate.append('fileHash', item.fileHash)
+
+                    return this.$http.post('/upload', formDate, {
+                        onUploadProgress: progress => {
+                            this.percentage = Number(Math.floor(progress.loaded / this.file.size).toFixed()) * 100
+                        }
+                    })
+                })
+
+                console.log(chunksAxios)
+
+                // Promise.all(chunksAxios).then(resolve => {
+                //     console.log(resolve)
+                // })
 
                 // let formDate = new FormData();
                 
@@ -137,7 +174,7 @@
                 //         type: 'success'
                 //     });
                 // }
-            }
+            },
         },
         mounted() {
            this.$refs.upload.addEventListener('dragover', e => {
