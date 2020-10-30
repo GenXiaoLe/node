@@ -71,8 +71,12 @@
                 const chunks = []
                 const size = file.size
                 let countSize = 0
-                while (countSize < size) {
-                    chunks.push(file.slice(countSize, countSize + this.size))
+                while (countSize <= size) {
+                    let end = size
+                    if (countSize + this.size >= size) {
+                        end = countSize + this.size
+                    }
+                    chunks.push(file.slice(countSize, end))
                     countSize += this.size
                 }
                 return chunks
@@ -88,7 +92,7 @@
                     while (cur < size) {
                         // 如果是最后一块
                         if (cur + offset >= size) {
-                            fileChunks.push(file.slice(cur, cur + offset))
+                            fileChunks.push(file.slice(cur, size))
                         } else {
                             const min = (cur + offset) / 2
                             const end = cur + offset
@@ -123,9 +127,17 @@
                 const fileHash = await this.createFileHash(this.file)
                 console.log(fileHash)
 
-                await this.uploadFile(chunks, fileHash)
+                // 选获取文件上传的切片
+                const res = await this.$http.post('/checkFile', { hash: fileHash })
+                
+                let uploadList = []
+                // if (res.code === 1) {
+                //     uploadList = res.data.uploadList || []
+                // }
+
+                await this.uploadFile(chunks, fileHash, uploadList)
             },
-            async uploadFile (chunks, fileHash) {
+            async uploadFile (chunks, fileHash, uploadList) {
                 const chunksAxios = chunks.map((item, index) => {
                     return {
                         index,
@@ -133,6 +145,8 @@
                         fileHash,
                         name: `${fileHash}-${index}`
                     }
+                }).filter(item => {
+                    return !uploadList.includes(item.name)
                 }).map(item => {
                     let formDate = new FormData()
                     formDate.append('name', item.name)
@@ -146,26 +160,29 @@
                     })
                 })
 
-                console.log(chunksAxios)
+                if (!chunksAxios.length) {
+                    alert('当前文件已经全部上传成功')
+                    return
+                }
 
-                // Promise.all(chunksAxios).then(resolve => {
-                //     console.log(resolve)
-                // })
+                Promise.all(chunksAxios).then(resolve => {
+                    console.log(resolve)
+                })
 
-                // let formDate = new FormData();
+                let formDate = new FormData();
                 
-                // formDate.append('name', 'file');
-                // formDate.append('files', this.file);
+                formDate.append('name', 'file');
+                formDate.append('files', this.file);
 
-                // const ret = await this.$http.post(
-                //     '/upload', 
-                //     formDate,
-                //     {
-                //         onUploadProgress: progress => {
-                //             this.percentage = Number(Math.floor(progress.loaded / this.file.size).toFixed()) * 100
-                //         }
-                //     }
-                // );
+                const ret = await this.$http.post(
+                    '/upload', 
+                    formDate,
+                    {
+                        onUploadProgress: progress => {
+                            this.percentage = Number(Math.floor(progress.loaded / this.file.size).toFixed()) * 100
+                        }
+                    }
+                );
 
                 // if (ret.code === 1) {
                 //     this.fileUrl = ret.data.url;

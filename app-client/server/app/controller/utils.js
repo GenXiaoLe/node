@@ -4,6 +4,7 @@ const BaseController = require('./base');
 const svgCaptcah = require('svg-captcha');
 // const fse = require('fs-extra');
 const fs = require('fs');
+const path = require('path')
 
 class UtilsController extends BaseController {
   async captcha() {
@@ -46,17 +47,70 @@ class UtilsController extends BaseController {
     }
   }
 
+  async checkFile () {
+    const { ctx, app } = this
+    const { hash, ext } = ctx.request.body
+    // 获取文件地址
+    const filePath = path.resolve(app.config.UPLOADURL, `${hash}.${ext}`)
+
+    let uploadList = []
+    let uploaded = false
+    //如果文件存在
+    if (fs.existsSync(filePath)) {
+      uploaded = true
+    } else {
+      const chunkPath = path.resolve(app.config.UPLOADURL, hash)
+      uploadList = await this.getHashFileList(chunkPath)
+    }
+
+    this.success(ctx, { message: '获取列表', uploadList, uploaded });
+  }
+
+  async getHashFileList (path) {
+    return fs.existsSync(path)
+    ? await fs.readdirSync(path).filter(name => name[0] != '.')
+    : []
+  }
+
   async upload() {
     const { ctx, app } = this;
     const { filepath, filename } = ctx.request.files[0];
-    const uploadUrl = app.config.UPLOADURL + '/' + filename;
+    // const uploadUrl = app.config.UPLOADURL + '/' + filename;
+    const { name, fileHash } = ctx.request.body
+    
+    // 切片path
+    const chunkPath = path.resolve(app.config.UPLOADURL, fileHash)
+
+    // 如果没有文件夹 先创建文件夹
+    if (!this._fsExistsSync(chunkPath)) {
+      this._mkdirSync(chunkPath)
+    }
+
+    // 切片存储地址
+    const uploadUrl = chunkPath + '/' + name;
 
     try {
+      console.log(filepath, '-----', uploadUrl)
       // const ret = await fse.move(filepath, app.config.UPLOADURL + '/' + filename);
       fs.createReadStream(filepath).pipe(fs.createWriteStream(uploadUrl));
       this.success(ctx, { message: '上传成功', url: uploadUrl });
     } catch (error) {
       this.error(ctx, -1, '上传失败');
+    }
+  }
+
+  // 创建文件夹
+  _mkdirSync (path) {
+    fs.mkdirSync(path)
+  }
+
+  //检测文件或者文件夹存在
+  _fsExistsSync (path) {
+    try {
+      fs.accessSync(path)
+      return true
+    } catch (e) {
+        return false
     }
   }
 }

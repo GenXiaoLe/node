@@ -13,6 +13,9 @@ module.exports = app => {
   // 上传图片
   router.post('/upload', controller.utils.upload);
 
+  // 获取已经上传的文件
+  router.post('/checkFile', controller.utils.checkFile);
+
   // 获取验证码
   router.get('/captcha', controller.utils.captcha);
 
