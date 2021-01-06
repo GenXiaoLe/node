@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "co-wechat": "^2.4.0",
     "co-wechat-api": "^3.10.0",
     "crypto": "^1.0.1",
